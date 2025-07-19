@@ -1,0 +1,20 @@
+{
+  "permissions": {
+    "allow": [
+      "Bash(deno test:*)",
+      "Bash(ls:*)",
+      "Bash(export:*)",
+      "Bash(mkdir:*)",
+      "Bash(mv:*)",
+      "Bash(deno check:*)",
+      "Bash(timeout:*)",
+      "Bash(find:*)",
+      "Bash(deno run:*)",
+      "Bash(node:*)",
+      "Bash(git init:*)",
+      "Bash(sed:*)",
+      "Bash(deno:*)"
+    ],
+    "deny": []
+  }
+}

@@ -1,0 +1,65 @@
+{
+  "$schema": "https://raw.githubusercontent.com/denoland/deno/348900b8b79f4a434cab4c74b3bc8d4d2fa8ee74/cli/schemas/config-file.v1.json",
+  "lock": false,
+  "compilerOptions": {
+    "noImplicitAny": true,
+    "strict": true,
+    "types": [
+      "https://www.val.town/types/valtown.d.ts"
+    ],
+    "lib": [
+      "dom",
+      "dom.iterable",
+      "dom.asynciterable",
+      "deno.ns",
+      "deno.unstable"
+    ],
+    "noImplicitReturns": true,
+    "noImplicitThis": true,
+    "noUnusedLocals": true,
+    "noUnusedParameters": true
+  },
+  "lint": {
+    "include": [
+      "src/**/*.ts"
+    ],
+    "rules": {
+      "exclude": [
+        "no-explicit-any",
+        "require-await"
+      ],
+      "tags": ["recommended"]
+    }
+  },
+  "node_modules_dir": false,
+  "experimental": {
+    "unstable-node-globals": true,
+    "unstable-temporal": true,
+    "unstable-worker-options": true,
+    "unstable-sloppy-imports": true
+  },
+  "tasks": {
+    "test": "deno test --allow-env --allow-net --allow-import src/*.test.ts",
+    "sync": "deno run --allow-env --allow-net --allow-import --env-file=.env src/sync.ts",
+    "cli": "deno run --allow-env --allow-net --allow-import src/cli.ts",
+    "check": "deno run --allow-env --allow-net --allow-import src/cli.ts check",
+    "validate": "deno run --allow-env --allow-net --allow-import src/cli.ts validate",
+    "dry-run": "deno run --allow-env --allow-net --allow-import src/cli.ts dry-run",
+    "setup-guide": "deno run --allow-env src/cli.ts setup"
+  },
+  "imports": {
+    "dayjs": "npm:dayjs@1.11.10",
+    "dayjs/": "npm:dayjs@1.11.10/",
+    "googleapis": "npm:googleapis@130",
+    "graphql-request": "npm:graphql-request@6",
+    "uuid": "npm:uuid@9.0.0"
+  },
+  "fmt": {
+    "useTabs": false,
+    "lineWidth": 80,
+    "indentWidth": 2,
+    "semiColons": true,
+    "singleQuote": false,
+    "proseWrap": "preserve"
+  }
+}
