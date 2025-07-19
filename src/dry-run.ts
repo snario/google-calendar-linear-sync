@@ -6,7 +6,7 @@
 import { SyncWorker } from "./worker.ts";
 import { SyncConfig, SyncResult } from "./types.ts";
 import { RealGCalApiClient, RealLinearApiClient } from "./api-clients.ts";
-import { validateApis, ValidationConfig } from "./api-validator.ts";
+import { validateApis, ValidationConfig } from "../scripts/api-validator.ts";
 
 export interface DryRunConfig extends SyncConfig {
   // Real API credentials

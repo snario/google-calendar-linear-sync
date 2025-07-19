@@ -13,7 +13,8 @@
       "Bash(node:*)",
       "Bash(git init:*)",
       "Bash(sed:*)",
-      "Bash(deno:*)"
+      "Bash(deno:*)",
+      "Bash(git add:*)"
     ],
     "deny": []
   }

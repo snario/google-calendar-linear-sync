@@ -3,7 +3,7 @@
  * Configuration helpers for running in Val Town environment with secrets
  */
 
-import { DryRunConfig } from "./dry-run.ts";
+import { DryRunConfig } from "../src/dry-run.ts";
 import { ValidationConfig } from "./api-validator.ts";
 
 /**

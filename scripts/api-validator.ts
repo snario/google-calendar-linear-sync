@@ -3,7 +3,7 @@
  * Used to ensure our mock data matches real API responses
  */
 
-import { GCalEvent, LinearIssue } from "./types.ts";
+import { GCalEvent, LinearIssue } from "../src/types.ts";
 
 export interface ValidationConfig {
   linearApiKey: string;

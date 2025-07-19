@@ -3,14 +3,14 @@
  * Usage: deno run --allow-env --allow-net --allow-import src/cli.ts [command]
  */
 
-import { validateApis } from "./api-validator.ts";
+import { validateApis } from "../scripts/api-validator.ts";
 import { runDrySync } from "./dry-run.ts";
 import {
   checkEnvironment,
   getValidationConfig,
   getValTownConfig,
   printValTownSetupGuide,
-} from "./val-town-config.ts";
+} from "../scripts/val-town-config.ts";
 
 async function main() {
   const args = Deno.args;
