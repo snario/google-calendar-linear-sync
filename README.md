@@ -132,28 +132,85 @@ src/
 ├── actuator.ts       # Diff → Actuate (execute operations)
 ├── worker.ts         # Main sync orchestrator
 ├── main.ts           # Entry point with configuration
+├── dry-run.ts        # Dry run mode for testing
 └── *.test.ts         # Comprehensive test suite
+
+scripts/
+├── check.ts          # Environment configuration checker
+├── validate.ts       # API structure validator
+├── setup.ts          # Val Town setup guide
+├── show-*.ts         # Debug scripts for data inspection
+├── api-validator.ts  # API structure validation
+├── val-town-config.ts # Val Town deployment helpers
+└── README.md         # Script documentation
 ```
 
 ## Usage
 
+### Development Tasks
+
+```bash
+# Check environment and configuration
+deno task check
+
+# Validate API structure
+deno task validate
+
+# Test sync logic with real data (no changes)
+deno task dry-run
+
+# Show setup guide for Val Town
+deno task setup
+
+# Run unit tests
+deno task test
+```
+
 ### Running Tests
 
 ```bash
-deno test --allow-env --allow-net --allow-import src/*.test.ts
+deno task test
 ```
 
 ### Running Sync
 
 ```bash
-# Set environment variables
-export LINEAR_API_KEY="your-linear-api-key"
-export LINEAR_TEAM_ID="your-team-id"
-export GCAL_API_KEY="your-google-api-key"
-export GCAL_CALENDAR_ID="your-calendar-id"
+# Create .env file with your credentials
+cp .env.example .env
+# Edit .env with your actual API keys
 
 # Run sync
-deno run --allow-env --allow-net src/main.ts
+deno task sync
+
+# Or run with dry-run mode first
+deno task dry-run
+```
+
+#### Environment Variables
+
+Create a `.env` file with:
+
+```bash
+LINEAR_API_KEY="your-linear-api-key"
+LINEAR_TEAM_ID="your-team-id"
+GOOGLE_SERVICE_ACCOUNT_JSON="base64-encoded-service-account"
+GCAL_CALENDAR_ID="your-calendar-id"
+```
+
+### Debug Scripts
+
+```bash
+# View Google Calendar events
+deno run --allow-env --allow-net scripts/show-gcal.ts
+
+# View Linear issues
+deno run --allow-env --allow-net scripts/show-linear.ts
+
+# View canonical projection
+deno run --allow-env --allow-net scripts/show-canonical.ts
+
+# Complete data flow analysis
+deno run --allow-env --allow-net scripts/show-all.ts
 ```
 
 ### Configuration
@@ -162,12 +219,12 @@ The worker is configured via environment variables:
 
 - `LINEAR_API_KEY`: Linear API token
 - `LINEAR_TEAM_ID`: Linear team identifier
-- `GCAL_API_KEY`: Google Calendar API key
+- `GOOGLE_SERVICE_ACCOUNT_JSON`: Base64-encoded Google service account JSON
 - `GCAL_CALENDAR_ID`: Primary calendar ID
 - `GCAL_HISTORY_CALENDAR_ID`: (Optional) Calendar for overdue items
-- `TIMEZONE`: Timezone for operations (default: UTC)
-- `LOOKBACK_DAYS`: Days to look back (default: 30)
-- `LOOKAHEAD_DAYS`: Days to look ahead (default: 90)
+- `TIMEZONE`: Timezone for operations (default: America/New_York)
+- `LOOKBACK_DAYS`: Days to look back (default: 2)
+- `LOOKAHEAD_DAYS`: Days to look ahead (default: 14)
 
 ## Performance Characteristics
 

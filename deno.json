@@ -21,7 +21,8 @@
   },
   "lint": {
     "include": [
-      "src/**/*.ts"
+      "src/**/*.ts",
+      "scripts/**/*.ts"
     ],
     "rules": {
       "exclude": [
@@ -40,12 +41,11 @@
   },
   "tasks": {
     "test": "deno test --allow-env --allow-net --allow-import src/*.test.ts",
-    "sync": "deno run --allow-env --allow-net --allow-import --env-file=.env src/sync.ts",
-    "cli": "deno run --allow-env --allow-net --allow-import src/cli.ts",
-    "check": "deno run --allow-env --allow-net --allow-import src/cli.ts check",
-    "validate": "deno run --allow-env --allow-net --allow-import src/cli.ts validate",
-    "dry-run": "deno run --allow-env --allow-net --allow-import src/cli.ts dry-run",
-    "setup-guide": "deno run --allow-env src/cli.ts setup"
+    "sync": "deno run --allow-env --allow-net --env-file=.env src/sync.ts",
+    "dry-run": "deno run --allow-env --allow-net --env-file=.env src/sync.ts --dry-run",
+    "check": "deno run --allow-env --allow-net --env-file=.env scripts/check.ts",
+    "validate": "deno run --allow-env --allow-net --env-file=.env scripts/validate.ts",
+    "setup": "deno run --allow-env scripts/setup.ts"
   },
   "imports": {
     "dayjs": "npm:dayjs@1.11.10",

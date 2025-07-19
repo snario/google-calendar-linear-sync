@@ -4,6 +4,7 @@
  */
 
 import { GCalEvent, LinearIssue } from "../src/types.ts";
+import { RealGCalApiClient, RealLinearApiClient } from "../src/api-clients.ts";
 
 export interface ValidationConfig {
   linearApiKey: string;
@@ -80,164 +81,42 @@ export class ApiValidator {
    * Fetch a sample Linear issue
    */
   private async fetchLinearSample(): Promise<LinearIssue> {
-    const query = `
-      query GetTeamIssues($teamId: String!) {
-        team(id: $teamId) {
-          issues(first: 1) {
-            nodes {
-              id
-              title
-              description
-              state {
-                name
-              }
-              estimate
-              dueDate
-            }
-          }
-        }
-      }
-    `;
-
-    const response = await fetch("https://api.linear.app/graphql", {
-      method: "POST",
-      headers: {
-        "Authorization": this.config.linearApiKey,
-        "Content-Type": "application/json",
-      },
-      body: JSON.stringify({
-        query,
-        variables: { teamId: this.config.linearTeamId },
-      }),
+    const linearClient = new RealLinearApiClient({
+      apiKey: this.config.linearApiKey,
+      teamId: this.config.linearTeamId,
     });
 
-    if (!response.ok) {
-      throw new Error(
-        `Linear API error: ${response.status} ${response.statusText}`,
-      );
-    }
+    const issues = await linearClient.getIssues(this.config.linearTeamId);
 
-    const data = await response.json();
-
-    if (data.errors) {
-      throw new Error(
-        `Linear GraphQL error: ${
-          data.errors.map((e: any) => e.message).join(", ")
-        }`,
-      );
-    }
-
-    const issue = data.data?.team?.issues?.nodes?.[0];
-    if (!issue) {
+    if (issues.length === 0) {
       throw new Error("No Linear issues found for validation");
     }
 
-    // Convert to our LinearIssue format
-    return {
-      id: issue.id,
-      title: issue.title,
-      description: issue.description,
-      state: issue.state.name,
-      targetDate: issue.dueDate,
-      estimate: issue.estimate,
-    };
+    return issues[0];
   }
 
   /**
    * Fetch a sample Google Calendar event
    */
   private async fetchGCalSample(): Promise<GCalEvent> {
-    // Decode service account JSON
-    const serviceAccount = JSON.parse(
-      atob(this.config.googleServiceAccountJson),
-    );
-
-    // Create JWT for Google API authentication
-    const jwt = await this.createGoogleJWT(serviceAccount);
-
-    // Get access token
-    const tokenResponse = await fetch("https://oauth2.googleapis.com/token", {
-      method: "POST",
-      headers: {
-        "Content-Type": "application/x-www-form-urlencoded",
-      },
-      body: new URLSearchParams({
-        grant_type: "urn:ietf:params:oauth:grant-type:jwt-bearer",
-        assertion: jwt,
-      }),
+    const gcalClient = new RealGCalApiClient({
+      serviceAccountJson: this.config.googleServiceAccountJson,
+      calendarId: this.config.gcalCalendarId,
     });
 
-    if (!tokenResponse.ok) {
-      throw new Error(`Google token error: ${tokenResponse.status}`);
-    }
-
-    const tokenData = await tokenResponse.json();
-    const accessToken = tokenData.access_token;
-
-    // Fetch calendar events
-    const eventsResponse = await fetch(
-      `https://www.googleapis.com/calendar/v3/calendars/${
-        encodeURIComponent(this.config.gcalCalendarId)
-      }/events?maxResults=1`,
-      {
-        headers: {
-          "Authorization": `Bearer ${accessToken}`,
-        },
-      },
+    const events = await gcalClient.getEvents(
+      this.config.gcalCalendarId,
+      new Date().toISOString(),
+      new Date(Date.now() + 7 * 24 * 60 * 60 * 1000).toISOString(),
     );
 
-    if (!eventsResponse.ok) {
-      throw new Error(`Google Calendar API error: ${eventsResponse.status}`);
-    }
-
-    const eventsData = await eventsResponse.json();
-    const event = eventsData.items?.[0];
-
-    if (!event) {
+    if (events.length === 0) {
       throw new Error("No Google Calendar events found for validation");
     }
 
-    return {
-      id: event.id,
-      summary: event.summary || "Untitled",
-      description: event.description,
-      start: { dateTime: event.start.dateTime || event.start.date },
-      end: { dateTime: event.end.dateTime || event.end.date },
-      extendedProperties: event.extendedProperties,
-      status: event.status || "confirmed",
-    };
+    return events[0];
   }
 
-  /**
-   * Create Google JWT for service account authentication
-   */
-  private async createGoogleJWT(serviceAccount: any): Promise<string> {
-    // This is a simplified implementation
-    // In a real implementation, you'd use a proper JWT library
-    const header = {
-      alg: "RS256",
-      typ: "JWT",
-    };
-
-    const now = Math.floor(Date.now() / 1000);
-    const payload = {
-      iss: serviceAccount.client_email,
-      scope: "https://www.googleapis.com/auth/calendar.readonly",
-      aud: "https://oauth2.googleapis.com/token",
-      exp: now + 3600,
-      iat: now,
-    };
-
-    // Note: This is a placeholder - real implementation would need crypto signing
-    const encodedHeader = btoa(JSON.stringify(header));
-    const encodedPayload = btoa(JSON.stringify(payload));
-
-    // For now, return a placeholder - this would need proper RSA signing
-    console.warn(
-      "⚠️  JWT creation is placeholder - needs proper crypto implementation",
-    );
-    return `${encodedHeader}.${encodedPayload}.placeholder-signature`;
-  }
 
   /**
    * Validate that our mock structures match real API responses

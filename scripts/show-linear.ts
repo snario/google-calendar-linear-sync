@@ -34,9 +34,7 @@ const tableData = issues.map((issue) => {
     "Target Date": issue.targetDate
       ? new Date(issue.targetDate).toISOString().substring(0, 10)
       : "",
-    "GCal ID": metadata?.gcalId
-      ? metadata.gcalId.substring(0, 12) + "..."
-      : "",
+    "GCal ID": metadata?.gcalId ? metadata.gcalId.substring(0, 12) + "..." : "",
     "Has Metadata": metadata ? "✅" : "",
   };
 });

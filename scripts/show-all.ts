@@ -70,19 +70,25 @@ const linkingData = [
     Source: "GCal Events",
     Items: gcalEvents.length,
     "With Links": gcalWithLinearId.length,
-    "Link Rate": `${((gcalWithLinearId.length / gcalEvents.length) * 100).toFixed(1)}%`,
+    "Link Rate": `${
+      ((gcalWithLinearId.length / gcalEvents.length) * 100).toFixed(1)
+    }%`,
   },
   {
     Source: "Linear Issues",
     Items: linearIssues.length,
     "With Links": linearWithMetadata.length,
-    "Link Rate": `${((linearWithMetadata.length / linearIssues.length) * 100).toFixed(1)}%`,
+    "Link Rate": `${
+      ((linearWithMetadata.length / linearIssues.length) * 100).toFixed(1)
+    }%`,
   },
   {
     Source: "Canonical Items",
     Items: result.items.length,
     "With Links": linkedCanonical.length,
-    "Link Rate": `${((linkedCanonical.length / result.items.length) * 100).toFixed(1)}%`,
+    "Link Rate": `${
+      ((linkedCanonical.length / result.items.length) * 100).toFixed(1)
+    }%`,
   },
 ];
 console.table(linkingData);
@@ -112,11 +118,31 @@ const phaseCounts = result.items.reduce((acc, item) => {
 
 console.log("\n📈 Phase Breakdown:");
 const phaseData = [
-  { Phase: "active", Count: phaseCounts.active || 0, Description: "Linked and syncing" },
-  { Phase: "completed", Count: phaseCounts.completed || 0, Description: "Done/Canceled/Failed" },
-  { Phase: "overdue", Count: phaseCounts.overdue || 0, Description: "Past deadline" },
-  { Phase: "eventOnly", Count: phaseCounts.eventOnly || 0, Description: "GCal event without Linear" },
-  { Phase: "linearOnly", Count: phaseCounts.linearOnly || 0, Description: "Linear issue without GCal" },
+  {
+    Phase: "active",
+    Count: phaseCounts.active || 0,
+    Description: "Linked and syncing",
+  },
+  {
+    Phase: "completed",
+    Count: phaseCounts.completed || 0,
+    Description: "Done/Canceled/Failed",
+  },
+  {
+    Phase: "overdue",
+    Count: phaseCounts.overdue || 0,
+    Description: "Past deadline",
+  },
+  {
+    Phase: "eventOnly",
+    Count: phaseCounts.eventOnly || 0,
+    Description: "GCal event without Linear",
+  },
+  {
+    Phase: "linearOnly",
+    Count: phaseCounts.linearOnly || 0,
+    Description: "Linear issue without GCal",
+  },
 ];
 console.table(phaseData);
 

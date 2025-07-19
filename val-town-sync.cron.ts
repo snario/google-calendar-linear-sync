@@ -11,7 +11,7 @@ import type { SyncConfig } from "./src/types.ts";
 // @cron */5 * * * *
 export default async function syncLinearGCal() {
   console.log("🚀 Val Town: Google Calendar ↔ Linear sync (DRL) starting...");
-  
+
   const config: SyncConfig = {
     linearApiKey: Deno.env.get("LINEAR_API_KEY") || "",
     linearTeamId: Deno.env.get("LINEAR_TEAM_ID") || "",
@@ -29,12 +29,16 @@ export default async function syncLinearGCal() {
 
   // Validate configuration
   if (!config.linearApiKey || !config.linearTeamId) {
-    console.error("❌ Missing Linear credentials: LINEAR_API_KEY, LINEAR_TEAM_ID");
+    console.error(
+      "❌ Missing Linear credentials: LINEAR_API_KEY, LINEAR_TEAM_ID",
+    );
     return;
   }
 
   if (!config.gcalCalendarId || !Deno.env.get("GOOGLE_SERVICE_ACCOUNT_JSON")) {
-    console.error("❌ Missing Google Calendar credentials: GCAL_ID, GOOGLE_SERVICE_ACCOUNT_JSON");
+    console.error(
+      "❌ Missing Google Calendar credentials: GCAL_ID, GOOGLE_SERVICE_ACCOUNT_JSON",
+    );
     return;
   }
 
@@ -70,7 +74,7 @@ export default async function syncLinearGCal() {
     }, {} as Record<string, number>);
 
     console.table([stats]);
-    
+
     if (Object.keys(opsByType).length > 0) {
       console.log("📋 Operations breakdown:");
       console.table([opsByType]);
@@ -89,7 +93,6 @@ export default async function syncLinearGCal() {
     } else {
       console.log("✅ Sync completed successfully");
     }
-
   } catch (error) {
     console.error("❌ Sync failed:", error);
     // Don't throw in Val Town - just log and continue

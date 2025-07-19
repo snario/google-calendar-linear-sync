@@ -4,18 +4,23 @@ This file provides guidance to Claude Code (claude.ai/code) when working with co
 
 ## Development Commands
 
-**Test**: `deno test --allow-env --allow-net --allow-import src/*.test.ts`
-**Sync**: `deno run --allow-env --allow-net --allow-import src/sync.ts`
-**CLI**: `deno run --allow-env --allow-net --allow-import src/cli.ts`
+**Test**: `deno task test`
+**Sync**: `deno task sync`
+**Dry Run**: `deno task dry-run`
+**Check Environment**: `deno task check`
+**Validate APIs**: `deno task validate`
+**Setup Guide**: `deno task setup`
 **Format**: `deno fmt` (configured for 2-space indents, 80-char lines, semicolons)
 **Lint**: `deno lint`
 
-Available CLI commands:
+Available deno tasks:
 
-- `deno task check` - Check API connectivity
-- `deno task validate` - Validate configuration
-- `deno task dry-run` - Preview sync operations without executing
-- `deno task setup-guide` - Show Val Town setup instructions
+- `deno task test` - Run unit tests
+- `deno task sync` - Run real sync with production data
+- `deno task dry-run` - Run sync with real data in dry-run mode (no changes made)
+- `deno task check` - Check environment configuration
+- `deno task validate` - Validate API structure and mock compatibility
+- `deno task setup` - Show Val Town configuration guide
 
 ## Architecture Overview
 
@@ -64,10 +69,10 @@ The system expects environment variables:
 
 - `LINEAR_API_KEY`: Linear API token
 - `LINEAR_TEAM_ID`: Linear team identifier
-- `GCAL_API_KEY`: Google Calendar API key
+- `GOOGLE_SERVICE_ACCOUNT_JSON`: Base64-encoded Google service account JSON
 - `GCAL_CALENDAR_ID`: Primary calendar ID
 - `GCAL_HISTORY_CALENDAR_ID`: (Optional) Calendar for overdue items
-- `TIMEZONE`: Timezone for operations (default: UTC)
+- `TIMEZONE`: Timezone for operations (default: America/New_York)
 
 ### Testing
 
@@ -83,13 +88,26 @@ src/
 ├── actuator.ts       # Diff → Actuate (execute operations)
 ├── worker.ts         # Main sync orchestrator
 ├── api-clients.ts    # Linear and Google Calendar API clients
-├── sync.ts           # Entry point for sync execution
-├── cli.ts            # Command-line interface
+├── main.ts           # Entry point for sync execution
+├── dry-run.ts        # Dry run mode for testing
 └── *.test.ts         # Comprehensive test suite
+
+scripts/
+├── check.ts          # Environment configuration checker
+├── validate.ts       # API structure validator
+├── setup.ts          # Val Town setup guide
+├── show-*.ts         # Debug scripts for data inspection
+├── api-validator.ts  # API structure validation
+├── val-town-config.ts # Val Town deployment helpers
+└── README.md         # Script documentation
 ```
 
 ### Debugging and Utilities
 
-- **Dry Run Mode**: Use `deno task dry-run` to preview operations without execution
-- **API Validation**: Use `deno task check` to verify API connectivity
-- **Scripts**: Helper scripts in `scripts/` directory for data inspection
+- **Development Tasks**: Use `deno task` commands for environment checks, API validation, and testing
+- **Debug Scripts**: Helper scripts in `scripts/` directory for data inspection:
+  - `show-gcal.ts` - View Google Calendar events
+  - `show-linear.ts` - View Linear issues
+  - `show-canonical.ts` - View canonical projection
+  - `show-all.ts` - Complete data flow analysis
+- **Val Town Deployment**: Use `scripts/val-town-config.ts` for deployment helpers
