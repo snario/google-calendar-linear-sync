@@ -14,7 +14,9 @@
       "Bash(git init:*)",
       "Bash(sed:*)",
       "Bash(deno:*)",
-      "Bash(git add:*)"
+      "Bash(git add:*)",
+      "Bash(git push:*)",
+      "Bash(git commit:*)"
     ],
     "deny": []
   }
