@@ -41,6 +41,7 @@ export interface GCalApiClient {
   copyEventToCalendar(
     eventId: string,
     targetCalendarId: string,
+    title?: string,
   ): Promise<GCalEvent>;
 }
 
@@ -260,6 +261,7 @@ export class Actuator {
     return this.clients.gcal.copyEventToCalendar(
       item.gcalId,
       this.config.gcalHistoryCalendarId,
+      item.title, // Pass the title with ⏳ prefix
     );
   }
 

@@ -114,6 +114,7 @@ class MockGCalApiClient {
   copyEventToCalendar(
     eventId: string,
     _targetCalendarId: string,
+    title?: string,
   ): Promise<GCalEvent> {
     const event = this.events.find((e) => e.id === eventId);
     if (!event) throw new Error(`Event ${eventId} not found`);
@@ -121,6 +122,7 @@ class MockGCalApiClient {
     return this.createEvent({
       ...event,
       id: undefined, // Will get new ID
+      summary: title || event.summary, // Use provided title or original
     });
   }
 

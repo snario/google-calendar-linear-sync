@@ -93,30 +93,29 @@ function generateOperationsForItem(item: CanonicalItem): Operation[] {
 
     case "overdue":
       // Transition 4: active → overdue
-      // Mark original event as "worked on" and create new event for continued tracking
+      // Copy original event to history calendar with ⏳ prefix, then reschedule the original event
       if (item.gcalId) {
         operations.push(
           {
-            type: "patchGCalEvent",
+            type: "copyEventToHistory",
             item: {
               ...item,
               title: addPrefix(item.title, PREFIXES.WORKED),
             },
-            reason: "Marking original event as worked on (⏳)",
+            reason: "Copying overdue event to history calendar with worked on (⏳) prefix",
           },
           {
-            type: "createRescheduledEvent",
+            type: "patchGCalEvent",
             item: {
               ...item,
-              // New event should get default scheduling
+              // Reschedule to new time, keep original title based on Linear state
               startTime: getDefaultStartTime(),
               endTime: getDefaultEndTime(getDefaultStartTime(), item.estimate),
-              // Keep original prefix based on Linear state
               title: item.linearState === "Scheduled"
                 ? addPrefix(item.title, PREFIXES.SCHEDULED)
                 : item.title,
             },
-            reason: "Creating new event to continue tracking overdue item",
+            reason: "Rescheduling overdue event to new time slot",
           },
         );
       }

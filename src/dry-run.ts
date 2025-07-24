@@ -115,15 +115,19 @@ class DryRunGCalClient extends RealGCalApiClient {
   override async copyEventToCalendar(
     eventId: string,
     targetCalendarId: string,
+    title?: string,
   ): Promise<any> {
     console.log("🔍 [DRY RUN] Would copy event to history calendar:");
     console.log(`   Event ID: ${eventId}`);
     console.log(`   Target Calendar: ${targetCalendarId}`);
+    if (title) {
+      console.log(`   New Title: ${title}`);
+    }
 
     // Return mock response
     return {
       id: `dry-run-copy-${Date.now()}`,
-      summary: "Copied Event",
+      summary: title || "Copied Event",
     };
   }
 }

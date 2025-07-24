@@ -411,6 +411,7 @@ export class RealGCalApiClient implements GCalApiClient {
   async copyEventToCalendar(
     eventId: string,
     targetCalendarId: string,
+    title?: string,
   ): Promise<GCalEvent> {
     await this.ensureAccessToken();
 
@@ -444,7 +445,7 @@ export class RealGCalApiClient implements GCalApiClient {
           "Content-Type": "application/json",
         },
         body: JSON.stringify({
-          summary: originalEvent.summary,
+          summary: title || originalEvent.summary, // Use provided title or original
           description: originalEvent.description,
           start: originalEvent.start,
           end: originalEvent.end,
