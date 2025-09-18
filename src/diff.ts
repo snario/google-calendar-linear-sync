@@ -102,7 +102,8 @@ function generateOperationsForItem(item: CanonicalItem): Operation[] {
               ...item,
               title: addPrefix(item.title, PREFIXES.WORKED),
             },
-            reason: "Copying overdue event to history calendar with worked on (⏳) prefix",
+            reason:
+              "Copying overdue event to history calendar with worked on (⏳) prefix",
           },
           {
             type: "patchGCalEvent",

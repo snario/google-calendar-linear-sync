@@ -192,7 +192,7 @@ flowchart LR
 ## Key Design Principles
 
 - **Stateless**: No database required; all state lives in remote systems via UID linkages
-- **Deterministic**: Pure functions ensure identical inputs always produce identical outputs  
+- **Deterministic**: Pure functions ensure identical inputs always produce identical outputs
 - **Idempotent**: Operations can be safely retried without side effects
 - **Minimal**: Only necessary changes are made to external systems
 - **Observable**: Clear phase classifications and operation logging for debugging

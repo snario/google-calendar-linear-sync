@@ -117,7 +117,6 @@ export class ApiValidator {
     return events[0];
   }
 
-
   /**
    * Validate that our mock structures match real API responses
    */
