@@ -55,6 +55,21 @@ export class Actuator {
     this.scheduler = new SmartScheduler(config);
   }
 
+  /**
+   * Clean description by removing old Google Calendar event links
+   */
+  private cleanDescription(description: string): string {
+    // Remove any existing Google Calendar event links from the description
+    // This prevents accumulation of old event links during rollovers
+    return description
+      .split("\n")
+      .filter((line) =>
+        !line.includes("https://calendar.google.com/calendar/event?eid=")
+      )
+      .join("\n")
+      .trim();
+  }
+
   async execute(operations: Operation[]): Promise<ExecutionResult[]> {
     const results: ExecutionResult[] = [];
 
@@ -169,15 +184,20 @@ export class Actuator {
     }
 
     // Always create timed events for Linear tasks (never all-day)
-    let description = item.description || "";
+    const rawDescription = this.cleanDescription(item.description || "");
+
+    // Build the clean description with Linear link
+    let description = "";
 
     // Add Linear link to GCal description for easy navigation
     if (item.linearId) {
       const linearLink =
         `Linear issue: [${item.linearId}](https://linear.app/liamhorne/issue/${item.linearId})`;
-      description = description
-        ? `${linearLink}\n\n${description}`
+      description = rawDescription
+        ? `${linearLink}\n\n${rawDescription}`
         : linearLink;
+    } else {
+      description = rawDescription;
     }
 
     const event: Partial<GCalEvent> = {
@@ -206,10 +226,24 @@ export class Actuator {
       summary: item.title,
     };
 
-    // Add description if present
-    if (item.description !== undefined) {
-      updates.description = item.description;
+    // Build description with Linear link
+    const rawDescription = this.cleanDescription(item.description || "");
+
+    // Build the clean description with Linear link
+    let description = "";
+
+    // Add Linear link to GCal description for easy navigation
+    if (item.linearId) {
+      const linearLink =
+        `Linear issue: [${item.linearId}](https://linear.app/liamhorne/issue/${item.linearId})`;
+      description = rawDescription
+        ? `${linearLink}\n\n${rawDescription}`
+        : linearLink;
+    } else {
+      description = rawDescription;
     }
+
+    updates.description = description;
 
     // Add timing if present
     if (item.startTime && item.endTime) {
@@ -297,9 +331,24 @@ export class Actuator {
       endTime = slot.endTime;
     }
 
+    // Clean up the description from old Google Calendar links
+    const rawDescription = this.cleanDescription(item.description || "");
+
+    // Build the clean description with Linear link
+    let description = "";
+    if (item.linearId) {
+      const linearLink =
+        `Linear issue: [${item.linearId}](https://linear.app/liamhorne/issue/${item.linearId})`;
+      description = rawDescription
+        ? `${linearLink}\n\n${rawDescription}`
+        : linearLink;
+    } else {
+      description = rawDescription;
+    }
+
     const event: Partial<GCalEvent> = {
       summary: item.title, // Already has correct prefix from diff
-      description: item.description,
+      description,
       start: { dateTime: startTime },
       end: { dateTime: endTime },
       extendedProperties: {
@@ -326,10 +375,18 @@ export class Actuator {
 
     // Step 2: Update the GCal event with the new Linear issue ID and title
     if (item.gcalId) {
+      // Clean up the description from old Google Calendar links
+      const rawDescription = this.cleanDescription(item.description || "");
+
+      const linearLink =
+        `Linear issue: [${createdIssue.id}](https://linear.app/liamhorne/issue/${createdIssue.id})`;
+      const description = rawDescription
+        ? `${linearLink}\n\n${rawDescription}`
+        : linearLink;
+
       const updates: Partial<GCalEvent> = {
         summary: item.title, // Should already have 📥 prefix from item
-        description:
-          `Linear issue: [${createdIssue.id}](https://linear.app/liamhorne/issue/${createdIssue.id})`,
+        description,
         extendedProperties: {
           private: {
             uid: item.uid,
