@@ -98,6 +98,10 @@ export class SmartScheduler {
     durationMin: number,
     existingEvents: GCalEvent[],
   ): TimeSlot | null {
+    // Use middle-of-day scheduling: prefer 10 AM to 4 PM
+    const preferredStart = Math.max(10, this.config.workingHours.startHour);
+    const preferredEnd = Math.min(16, this.config.workingHours.endHour);
+
     const dayStart = date
       .hour(this.config.workingHours.startHour)
       .minute(0)
@@ -108,57 +112,127 @@ export class SmartScheduler {
       .minute(0)
       .second(0);
 
+    const preferredDayStart = date
+      .hour(preferredStart)
+      .minute(0)
+      .second(0);
+
+    const preferredDayEnd = date
+      .hour(preferredEnd)
+      .minute(0)
+      .second(0);
+
     // Get events for this day and sort by start time
     const dayEvents = this.getEventsForDate(date, existingEvents)
       .sort((a, b) =>
         dayjs(a.start.dateTime).valueOf() - dayjs(b.start.dateTime).valueOf()
       );
 
-    // Try to find a slot before the first event
+    // Try to find a slot in preferred hours first (10 AM - 4 PM)
     if (dayEvents.length === 0) {
-      // No events, use start of day
+      // No events, use preferred start time
       return {
-        startTime: dayStart.toISOString(),
-        endTime: dayStart.add(durationMin, "minutes").toISOString(),
+        startTime: preferredDayStart.toISOString(),
+        endTime: preferredDayStart.add(durationMin, "minutes").toISOString(),
       };
     }
 
-    const firstEventStart = dayjs(dayEvents[0].start.dateTime);
-    if (firstEventStart.diff(dayStart, "minutes") >= durationMin) {
-      // Fits before first event
+    // First, try to find slots within preferred hours
+    const preferredSlot = this.findSlotInTimeRange(
+      preferredDayStart,
+      preferredDayEnd,
+      durationMin,
+      dayEvents,
+    );
+    if (preferredSlot) {
+      return preferredSlot;
+    }
+
+    // If no preferred slot found, try full working day with better spacing
+    const fullDaySlot = this.findSlotInTimeRange(
+      dayStart,
+      dayEnd,
+      durationMin,
+      dayEvents,
+    );
+
+    return fullDaySlot;
+  }
+
+  /**
+   * Find an available slot within a specific time range
+   */
+  private findSlotInTimeRange(
+    rangeStart: dayjs.Dayjs,
+    rangeEnd: dayjs.Dayjs,
+    durationMin: number,
+    dayEvents: GCalEvent[],
+  ): TimeSlot | null {
+    // Add 15-minute buffer between events to prevent tight scheduling
+    const BUFFER_MINUTES = 15;
+    const totalDurationNeeded = durationMin + BUFFER_MINUTES;
+
+    // Filter events that overlap with our time range
+    const relevantEvents = dayEvents.filter((event) => {
+      const eventStart = dayjs(event.start.dateTime);
+      const eventEnd = dayjs(event.end.dateTime);
+      return eventStart.isBefore(rangeEnd) && eventEnd.isAfter(rangeStart);
+    });
+
+    if (relevantEvents.length === 0) {
+      // No events in range, use range start
+      const endTime = rangeStart.add(durationMin, "minutes");
+      if (endTime.isAfter(rangeEnd)) {
+        return null; // Doesn't fit in range
+      }
       return {
-        startTime: dayStart.toISOString(),
-        endTime: dayStart.add(durationMin, "minutes").toISOString(),
+        startTime: rangeStart.toISOString(),
+        endTime: endTime.toISOString(),
       };
     }
 
-    // Try to find gaps between events
-    for (let i = 0; i < dayEvents.length - 1; i++) {
-      const currentEventEnd = dayjs(dayEvents[i].end.dateTime);
-      const nextEventStart = dayjs(dayEvents[i + 1].start.dateTime);
+    // Try before first event
+    const firstEventStart = dayjs(relevantEvents[0].start.dateTime);
+    const spaceBeforeFirst = firstEventStart.diff(rangeStart, "minutes");
+    if (spaceBeforeFirst >= totalDurationNeeded) {
+      return {
+        startTime: rangeStart.toISOString(),
+        endTime: rangeStart.add(durationMin, "minutes").toISOString(),
+      };
+    }
 
-      const gapMinutes = nextEventStart.diff(currentEventEnd, "minutes");
-      if (gapMinutes >= durationMin) {
-        // Found a gap that fits
+    // Try gaps between events
+    for (let i = 0; i < relevantEvents.length - 1; i++) {
+      const currentEventEnd = dayjs(relevantEvents[i].end.dateTime);
+      const nextEventStart = dayjs(relevantEvents[i + 1].start.dateTime);
+
+      const potentialStart = currentEventEnd.add(BUFFER_MINUTES, "minutes");
+      const potentialEnd = potentialStart.add(durationMin, "minutes");
+
+      if (
+        potentialEnd.add(BUFFER_MINUTES, "minutes").isBefore(nextEventStart)
+      ) {
         return {
-          startTime: currentEventEnd.toISOString(),
-          endTime: currentEventEnd.add(durationMin, "minutes").toISOString(),
+          startTime: potentialStart.toISOString(),
+          endTime: potentialEnd.toISOString(),
         };
       }
     }
 
-    // Try after the last event
-    const lastEventEnd = dayjs(dayEvents[dayEvents.length - 1].end.dateTime);
-    const remainingMinutes = dayEnd.diff(lastEventEnd, "minutes");
+    // Try after last event
+    const lastEventEnd = dayjs(
+      relevantEvents[relevantEvents.length - 1].end.dateTime,
+    );
+    const potentialStart = lastEventEnd.add(BUFFER_MINUTES, "minutes");
+    const potentialEnd = potentialStart.add(durationMin, "minutes");
 
-    if (remainingMinutes >= durationMin) {
+    if (potentialEnd.isBefore(rangeEnd)) {
       return {
-        startTime: lastEventEnd.toISOString(),
-        endTime: lastEventEnd.add(durationMin, "minutes").toISOString(),
+        startTime: potentialStart.toISOString(),
+        endTime: potentialEnd.toISOString(),
       };
     }
 
-    // No slot found on this day
     return null;
   }
 
@@ -190,11 +264,14 @@ export class SmartScheduler {
   getDefaultTimeSlot(estimate: LinearEstimate = "S"): TimeSlot {
     const durationMin = estimateToDuration(estimate);
 
-    // Tomorrow at 9 AM in configured timezone
+    // Use middle-of-day scheduling: prefer 10 AM to 4 PM
+    const preferredStart = Math.max(10, this.config.workingHours.startHour);
+
+    // Tomorrow at preferred time (default 10 AM) in configured timezone
     const startTime = dayjs()
       .tz(this.config.timezone)
       .add(1, "day")
-      .hour(this.config.workingHours.startHour)
+      .hour(preferredStart)
       .minute(0)
       .second(0);
 
