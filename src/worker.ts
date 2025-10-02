@@ -73,7 +73,7 @@ export class SyncWorker {
 
       // 3. DIFF: Compute required operations
       console.log("🔍 Computing operations...");
-      const operations = diff(projection.items);
+      const operations = diff(projection.items, this.config.timezone);
 
       console.log(`⚡ Generated ${operations.length} operations`);
       this.logOperations(operations);

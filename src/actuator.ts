@@ -111,8 +111,6 @@ export class Actuator {
       case "patchLinearIssue":
         return this.patchLinearIssue(operation.item);
 
-      case "copyEventToHistory":
-        return this.copyEventToHistory(operation.item);
 
       case "createRescheduledEvent":
         return this.createRescheduledEvent(operation.item);
@@ -285,19 +283,6 @@ export class Actuator {
     return this.clients.linear.updateIssue(item.linearId, updates);
   }
 
-  private async copyEventToHistory(
-    item: CanonicalItem,
-  ): Promise<GCalEvent | null> {
-    if (!item.gcalId || !this.config.gcalHistoryCalendarId) {
-      return null; // No history calendar configured
-    }
-
-    return this.clients.gcal.copyEventToCalendar(
-      item.gcalId,
-      this.config.gcalHistoryCalendarId,
-      item.title, // Pass the title with ⏳ prefix
-    );
-  }
 
   /**
    * Creates a new Google Calendar event for overdue items.

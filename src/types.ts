@@ -73,7 +73,6 @@ export type OperationType =
   | "createGCalEvent"
   | "patchGCalEvent"
   | "patchLinearIssue"
-  | "copyEventToHistory"
   | "createRescheduledEvent" // New operation for overdue items
   | "createLinearIssueAndUpdateGCal" // Combined operation for eventOnly items
   | "createGCalEventAndUpdateLinear" // Combined operation for linearOnly items

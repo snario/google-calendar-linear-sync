@@ -11,19 +11,24 @@ import {
   PREFIXES,
 } from "./types.ts";
 import dayjs from "npm:dayjs@1.11.10";
+import timezonePlugin from "npm:dayjs@1.11.10/plugin/timezone.js";
+import utc from "npm:dayjs@1.11.10/plugin/utc.js";
 
-export function diff(items: CanonicalItem[]): Operation[] {
+dayjs.extend(utc);
+dayjs.extend(timezonePlugin);
+
+export function diff(items: CanonicalItem[], timezone: string = "America/New_York"): Operation[] {
   const operations: Operation[] = [];
 
   for (const item of items) {
-    const ops = generateOperationsForItem(item);
+    const ops = generateOperationsForItem(item, timezone);
     operations.push(...ops);
   }
 
   return operations;
 }
 
-function generateOperationsForItem(item: CanonicalItem): Operation[] {
+function generateOperationsForItem(item: CanonicalItem, timezone: string): Operation[] {
   const operations: Operation[] = [];
 
   switch (item.phase) {
@@ -45,7 +50,7 @@ function generateOperationsForItem(item: CanonicalItem): Operation[] {
       // Transition 2: linearOnly → active
       // Linear issue enters "Scheduled", has no GCal twin
       if (item.linearState === "Scheduled") {
-        const startTime = item.startTime || getDefaultStartTime();
+        const startTime = item.startTime || getDefaultStartTime(timezone);
         const endTime = getDefaultEndTime(startTime, item.estimate);
 
         operations.push({
@@ -95,30 +100,19 @@ function generateOperationsForItem(item: CanonicalItem): Operation[] {
       // Transition 4: active → overdue
       // Copy original event to history calendar with ⏳ prefix, then reschedule the original event
       if (item.gcalId) {
-        operations.push(
-          {
-            type: "copyEventToHistory",
-            item: {
-              ...item,
-              title: addPrefix(item.title, PREFIXES.WORKED),
-            },
-            reason:
-              "Copying overdue event to history calendar with worked on (⏳) prefix",
+        operations.push({
+          type: "patchGCalEvent",
+          item: {
+            ...item,
+            // Reschedule to new time, keep original title based on Linear state
+            startTime: getDefaultStartTime(timezone),
+            endTime: getDefaultEndTime(getDefaultStartTime(timezone), item.estimate),
+            title: item.linearState === "Scheduled"
+              ? addPrefix(item.title, PREFIXES.SCHEDULED)
+              : item.title,
           },
-          {
-            type: "patchGCalEvent",
-            item: {
-              ...item,
-              // Reschedule to new time, keep original title based on Linear state
-              startTime: getDefaultStartTime(),
-              endTime: getDefaultEndTime(getDefaultStartTime(), item.estimate),
-              title: item.linearState === "Scheduled"
-                ? addPrefix(item.title, PREFIXES.SCHEDULED)
-                : item.title,
-            },
-            reason: "Rescheduling overdue event to new time slot",
-          },
-        );
+          reason: "Rescheduling overdue event to new time slot",
+        });
       }
       break;
 
@@ -176,9 +170,9 @@ function getCompletionPrefix(state: string): string {
   }
 }
 
-function getDefaultStartTime(): string {
-  // Default to tomorrow at 9 AM
-  return dayjs().add(1, "day").hour(9).minute(0).second(0).toISOString();
+function getDefaultStartTime(tz: string = "America/New_York"): string {
+  // Default to tomorrow at 9 AM in the specified timezone
+  return dayjs().tz(tz).add(1, "day").hour(9).minute(0).second(0).toISOString();
 }
 
 function getDefaultEndTime(startTime: string, estimate: string = "S"): string {

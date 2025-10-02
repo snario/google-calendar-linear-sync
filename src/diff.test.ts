@@ -94,15 +94,10 @@ Deno.test("diff generates overdue operations", () => {
 
   const operations = diff([item]);
 
-  assertEquals(operations.length, 2);
-  assertEquals(operations[0].type, "copyEventToHistory");
+  assertEquals(operations.length, 1);
+  assertEquals(operations[0].type, "patchGCalEvent");
   assertEquals(
     operations[0].reason,
-    "Copying overdue event to history calendar with worked on (⏳) prefix",
-  );
-  assertEquals(operations[1].type, "patchGCalEvent");
-  assertEquals(
-    operations[1].reason,
     "Rescheduling overdue event to new time slot",
   );
 });
