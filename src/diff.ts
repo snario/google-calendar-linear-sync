@@ -3,13 +3,7 @@
  * Pure function that takes canonical items and produces operations to execute
  */
 
-import {
-  addPrefix,
-  CanonicalItem,
-  estimateToDuration,
-  Operation,
-  PREFIXES,
-} from "./types.ts";
+import { addPrefix, CanonicalItem, Operation, PREFIXES } from "./types.ts";
 import dayjs from "npm:dayjs@1.11.10";
 import timezonePlugin from "npm:dayjs@1.11.10/plugin/timezone.js";
 import utc from "npm:dayjs@1.11.10/plugin/utc.js";
@@ -17,7 +11,10 @@ import utc from "npm:dayjs@1.11.10/plugin/utc.js";
 dayjs.extend(utc);
 dayjs.extend(timezonePlugin);
 
-export function diff(items: CanonicalItem[], timezone: string = "America/New_York"): Operation[] {
+export function diff(
+  items: CanonicalItem[],
+  timezone: string = "America/New_York",
+): Operation[] {
   const operations: Operation[] = [];
 
   for (const item of items) {
@@ -28,7 +25,10 @@ export function diff(items: CanonicalItem[], timezone: string = "America/New_Yor
   return operations;
 }
 
-function generateOperationsForItem(item: CanonicalItem, timezone: string): Operation[] {
+function generateOperationsForItem(
+  item: CanonicalItem,
+  _timezone: string,
+): Operation[] {
   const operations: Operation[] = [];
 
   switch (item.phase) {
@@ -50,16 +50,14 @@ function generateOperationsForItem(item: CanonicalItem, timezone: string): Opera
       // Transition 2: linearOnly → active
       // Linear issue enters "Scheduled", has no GCal twin
       if (item.linearState === "Scheduled") {
-        const startTime = item.startTime || getDefaultStartTime(timezone);
-        const endTime = getDefaultEndTime(startTime, item.estimate);
-
+        // Don't set default times here - let the actuator's smart scheduler handle it
         operations.push({
           type: "createGCalEventAndUpdateLinear",
           item: {
             ...item,
             title: addPrefix(item.title, PREFIXES.SCHEDULED),
-            startTime,
-            endTime,
+            // Leave startTime and endTime as-is (could be undefined)
+            // The actuator will use smart scheduling to find available slots
           },
           reason:
             "Scheduled Linear issue needs GCal event and metadata linking",
@@ -104,9 +102,10 @@ function generateOperationsForItem(item: CanonicalItem, timezone: string): Opera
           type: "patchGCalEvent",
           item: {
             ...item,
-            // Reschedule to new time, keep original title based on Linear state
-            startTime: getDefaultStartTime(timezone),
-            endTime: getDefaultEndTime(getDefaultStartTime(timezone), item.estimate),
+            // Don't set default times here - let the actuator's smart scheduler handle it
+            // Remove startTime and endTime to trigger smart scheduling in actuator
+            startTime: undefined,
+            endTime: undefined,
             title: item.linearState === "Scheduled"
               ? addPrefix(item.title, PREFIXES.SCHEDULED)
               : item.title,
@@ -168,17 +167,6 @@ function getCompletionPrefix(state: string): string {
     default:
       return PREFIXES.DONE; // fallback
   }
-}
-
-function getDefaultStartTime(tz: string = "America/New_York"): string {
-  // Default to tomorrow at 9 AM in the specified timezone
-  return dayjs().tz(tz).add(1, "day").hour(9).minute(0).second(0).toISOString();
-}
-
-function getDefaultEndTime(startTime: string, estimate: string = "S"): string {
-  // Use estimate-based duration instead of fixed 1 hour
-  const duration = estimateToDuration(estimate as any) || 30;
-  return dayjs(startTime).add(duration, "minutes").toISOString();
 }
 
 // Phase transition validator (for testing)

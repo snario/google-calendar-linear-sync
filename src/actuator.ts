@@ -111,7 +111,6 @@ export class Actuator {
       case "patchLinearIssue":
         return this.patchLinearIssue(operation.item);
 
-
       case "createRescheduledEvent":
         return this.createRescheduledEvent(operation.item);
 
@@ -282,7 +281,6 @@ export class Actuator {
 
     return this.clients.linear.updateIssue(item.linearId, updates);
   }
-
 
   /**
    * Creates a new Google Calendar event for overdue items.

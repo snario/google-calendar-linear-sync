@@ -17,7 +17,10 @@
       "Bash(git add:*)",
       "Bash(git push:*)",
       "Bash(git commit:*)",
-      "Bash(rm:*)"
+      "Bash(rm:*)",
+      "Bash(npx vt:*)",
+      "Bash(vt deploy:*)",
+      "Bash(vt push:*)"
     ],
     "deny": []
   }
